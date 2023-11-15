@@ -1,10 +1,11 @@
-Function Similarity Scorer for Source Code Files
+#Function Similarity Scorer for Source Code Files
 This project aims to develop an algorithm for calculating similarity scores between functions in different source code files. The algorithm compares functions from one file against functions in another file and outputs a matrix of similarity scores for all pairings.
 
-Goal
+##Goal
 Input: Two separate source code files.
 Output: Matrix displaying similarity scores between each function in one file against every function in the other file.
-Implementation
+
+##Implementation
 The algorithm can be implemented in C/C++ or Java.
 Develop function profiles based on attributes such as function name, return type, parameter count, etc., to establish the basis for similarity comparisons.
 Justify and compare various approaches regarding their strengths and weaknesses. For instance, assess the feasibility of collecting function profiles and evaluate the speed of profile comparisons.
