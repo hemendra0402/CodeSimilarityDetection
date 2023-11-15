@@ -1,14 +1,12 @@
-The goal of this project idea is to develop and implement an algorithm for assigning similarity
-scores between each function in a source code file against each other function in a different
-source code file.
-1. Given two different source code files.
-2. Output a matrix of similarity scores between all pairings of the functions from one of the
-files with the functions of the other file’s functions.
-● The algorithm can be implemented in C/C++, or Java.
-● Develop collections of attributes as a “profile” to base similarity comparisons on (i.e.
-function return type, signature parameter count, etc.)
-● Justify and compare the strengths and weaknesses of different approaches (i.e. is the
-profile reasonable to collect, is it fast to make comparisons between profiles, etc).
-● Conduct experimental testing of the implemented solution for correctness.
-● Explore the balance between being too abstract and too narrow in comparing two
-functions
+Function Similarity Scorer for Source Code Files
+This project aims to develop an algorithm for calculating similarity scores between functions in different source code files. The algorithm compares functions from one file against functions in another file and outputs a matrix of similarity scores for all pairings.
+
+Goal
+Input: Two separate source code files.
+Output: Matrix displaying similarity scores between each function in one file against every function in the other file.
+Implementation
+The algorithm can be implemented in C/C++ or Java.
+Develop function profiles based on attributes such as function name, return type, parameter count, etc., to establish the basis for similarity comparisons.
+Justify and compare various approaches regarding their strengths and weaknesses. For instance, assess the feasibility of collecting function profiles and evaluate the speed of profile comparisons.
+Conduct experimental testing to ensure correctness and measure the effectiveness of the implemented solution.
+Explore the trade-off between abstraction and specificity when comparing two functions, ensuring the comparison is neither too abstract (reporting every function as similar) nor too narrow (reporting only exact copies as similar).
