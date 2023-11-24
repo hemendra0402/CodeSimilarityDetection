@@ -1,24 +1,46 @@
 #include <iostream>
 #include <clang-c/Index.h>
+#include <vector>
+#include <string>
 
 // compile
 // my clang file are in my C:\LLVM folder which is why i specify my libraries that way
 // clang++ -I "C:\LLVM\include" -L "C:\LLVM\lib" main.cpp -o hello.exe -llibclang
 // ./hello runs the program
 // clang++ -std=c++11 -I/usr/local/opt/llvm/include -L/usr/local/opt/llvm/lib main.cpp -o hello.exe -lclang
+// clang++ -std=c++14 -I "C:\LLVM\include" -L "C:\LLVM\lib" mymain.cpp -o hello.exe -llibclang
+
 void printAST(CXCursor cursor, int level) {
+    // get cursor info
     CXString cursorKind = clang_getCursorKindSpelling(clang_getCursorKind(cursor));
     CXString cursorSpelling = clang_getCursorSpelling(cursor);
     CXSourceLocation location = clang_getCursorLocation(cursor);
     CXString fileName;
     unsigned line, column;
+    
+    // get location relative to position in file
     clang_getPresumedLocation(location, &fileName, &line, &column);
 
-    for (int i = 0; i < level; ++i)
-        std::cout << "  ";
+    // check if the location is in the file
+    bool print;
+    if (clang_Location_isFromMainFile(location) == 0) {
+        print = false;
+    }
+    else
+    {
+        print = true;
+    }
 
-    std::cout << "Cursor '" << clang_getCString(cursorSpelling) << "' (" << clang_getCString(cursorKind) << ") at " << clang_getCString(fileName) << ":" << line << ":" << column << std::endl;
+    // if the function is printable print it
+    if (print)
+    {
+        for (int i = 0; i < level; ++i)
+            std::cout << "  ";
 
+        std::cout << "Cursor '" << clang_getCString(cursorSpelling) << "' (" << clang_getCString(cursorKind) << ") at " << clang_getCString(fileName) << ":" << line << ":" << column << std::endl;
+    }
+
+    // dispose of variables
     clang_disposeString(cursorSpelling);
     clang_disposeString(fileName);
     clang_disposeString(cursorKind);
@@ -34,9 +56,11 @@ void printAST(CXCursor cursor, int level) {
     );
 }
 
-void collectFunctionInfo(CXCursor cursor, std::vector<std::string>& functionInfo) {
+void collectFunctionInfo(CXCursor cursor, std::vector<std::string>& functionInfo) { 
     // if (clang_Location_isFromMainFile(clang_getCursorLocation(cursor)) == 0)
     //     return;  
+    
+    CXSourceLocation location = clang_getCursorLocation(cursor);
 
     if (clang_getCursorKind(cursor) == CXCursor_FunctionDecl) {
         // get function name
@@ -61,9 +85,12 @@ void collectFunctionInfo(CXCursor cursor, std::vector<std::string>& functionInfo
             paramInfo += paramTypeStr + " ";
         }
 
-        //collect
+        //collect info if in file
         std::string functionDetails = functionName + " | Return Type: " + returnTypeStr + " | " + paramInfo;
-        functionInfo.push_back(functionDetails);
+        bool print;
+        if (clang_Location_isFromMainFile(location) != 0) {
+            functionInfo.push_back(functionDetails);
+        }
     }
 
     // traversing children
