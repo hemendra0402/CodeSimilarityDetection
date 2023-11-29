@@ -6,54 +6,77 @@
 
 // compile
 // my clang file are in my C:\LLVM folder which is why i specify my libraries that way
-// clang++ -I "C:\LLVM\include" -L "C:\LLVM\lib" main.cpp -o hello.exe -llibclang
-// ./hello runs the program
-// clang++ -std=c++11 -I/usr/local/opt/llvm/include -L/usr/local/opt/llvm/lib main.cpp -o hello.exe -lclang
-// clang++ -std=c++14 -I "C:\LLVM\include" -L "C:\LLVM\lib" mymain.cpp -o hello.exe -llibclang
+// ./run runs the program
+// clang++ -std=c++11 -I/usr/local/opt/llvm/include -L/usr/local/opt/llvm/lib main.cpp -o run.exe -lclang
+// clang++ -std=c++14 -I "C:\LLVM\include" -L "C:\LLVM\lib" mymain.cpp -o run.exe -llibclang
 
-
+/// @brief Node containing an individual nodes features
 class Node {
     public: 
-        Node(const std::string& functionName, const std::string& fileName) : functionName(functionName), fileName(fileName), numCallExpr(0), numParamDecl(0) {}
+        Node(const std::string& functionName, const std::string& fileName) : 
+        functionName(functionName), fileName(fileName), 
+        numCallExpr(0), numParamDecl(0), numVarDecl(0), numBinaryOperator(0) {}
         
+        /// @brief Every time a child is visited check the element for certain features and increment them to the node
         static enum CXChildVisitResult Visitor(CXCursor cursor, CXCursor parent, CXClientData client_data) 
         {
+            // contains list of clang kinds
+            // https://clang.llvm.org/doxygen/group__CINDEX.html#gaaccc432245b4cd9f2d470913f9ef0013
             Node* node = static_cast<Node*>(client_data);
-            if (clang_getCursorKind(cursor) == CXCursor_CallExpr) 
+            switch(clang_getCursorKind(cursor))
             {
-                node->numCallExpr++;
-            } 
-            else if (clang_getCursorKind(cursor) == CXCursor_ParmDecl) 
-            {
-                node->numParamDecl++;
+                case CXCursor_CallExpr:
+                    node->numCallExpr++;
+                    break;
+                case CXCursor_ParmDecl:
+                    node->numParamDecl++;
+                    break;
+                case CXCursor_VarDecl:
+                    node->numVarDecl++;
+                    break;
+                case CXCursor_BinaryOperator :
+                    node->numBinaryOperator++;
+                    break;
             }
+
             return CXChildVisit_Recurse;
         }
 
+        /// @brief Visit the next child in the function
+        /// @param cursor Cursor postion in the function 
         void VisitChildren(CXCursor cursor) 
         {
             clang_visitChildren(cursor, Node::Visitor, this);
         }
 
+        /// @brief Prints out function info after reading it
         void PrintCounts() const 
         {
             std::cout << "File: " << fileName << std::endl;
             std::cout << "Function: " << functionName << std::endl;
             std::cout << "Number of CallExpr: " << numCallExpr << std::endl;
             std::cout << "Number of ParamDecl: " << numParamDecl << std::endl;
+            std::cout << "Number of VarDecl " << numVarDecl << std::endl;
+            std::cout << "Number of BinaryOperator " << numBinaryOperator << std::endl;
         }
 
+        /// @brief Getter for the function values
+        /// @return The function values
         std::vector<int> GetValues() const
         {
-            std::vector<int> values = {numCallExpr, numParamDecl};
+            std::vector<int> values = {numCallExpr, numParamDecl, numVarDecl, numBinaryOperator};
             return values;
         }
 
+        /// @brief Getter for file name
+        /// @return FileName
         std::string GetFileName() const
         {
             return fileName;
         }
 
+        /// @brief Getter for function name
+        /// @return function name
         std::string GetFunctionName() const
         {
             return functionName;
@@ -64,8 +87,15 @@ class Node {
         std::string fileName;
         int numCallExpr;
         int numParamDecl;
+        int numVarDecl;
+        int numBinaryOperator;
 };
 
+/// @brief Creates a node with function information
+/// @param cursor The cursor position in the function
+/// @param functionName The name of the function
+/// @param fileName The file of the function
+/// @return The new node
 Node createNode(CXCursor cursor, CXString functionName, CXString fileName)
 {
     // Pass off the cursor to a different custom "visitor" of the Node class
@@ -75,8 +105,11 @@ Node createNode(CXCursor cursor, CXString functionName, CXString fileName)
     return node;
 }
 
-
-// Generic visitor function (for Node finding, not for Node creation)
+/// @brief Generic visitor function (for Node finding, not for Node creation)
+/// @param cursor Cursor postion in file
+/// @param parent Parent to cursor
+/// @param clientData Data to store in visitor function
+/// @return 
 CXChildVisitResult generic_visitor(CXCursor cursor, CXCursor parent, CXClientData clientData) {
     std::vector<Node>& nodeVector = *reinterpret_cast<std::vector<Node>*>(clientData);
     CXSourceLocation location = clang_getCursorLocation(cursor);
@@ -87,6 +120,7 @@ CXChildVisitResult generic_visitor(CXCursor cursor, CXCursor parent, CXClientDat
         return CXChildVisit_Continue;
     }
 
+    // get cursor info
     CXCursorKind cursorKind = clang_getCursorKind(cursor);
     CXString cursorSpelling = clang_getCursorSpelling(cursor);
     CXString fileName;
@@ -164,7 +198,7 @@ void printAST(CXCursor cursor, int level) {
     );
 }
 
-// not really used but wanted to keep
+// used for function info output not used in program
 void collectFunctionInfo(CXCursor cursor, std::vector<std::string>& functionInfo) { 
     // if (clang_Location_isFromMainFile(clang_getCursorLocation(cursor)) == 0)
     //     return;  
@@ -209,7 +243,9 @@ void collectFunctionInfo(CXCursor cursor, std::vector<std::string>& functionInfo
     }, &functionInfo);
 }
 
-
+/// @brief Read a file and get information in the vector
+/// @param fileName The name of the file to search
+/// @param nodeVector The node vector that stores the file info
 void ReadFile(const char* fileName, std::vector<Node>& nodeVector) 
 {
     CXIndex index = clang_createIndex(0, 0);
@@ -238,14 +274,19 @@ void ReadFile(const char* fileName, std::vector<Node>& nodeVector)
     printAST(cursor, 0);
     std::cout << std::endl;
     clang_visitChildren(clang_getTranslationUnitCursor(translation), generic_visitor, &nodeVector);
-
+    
     // dispose translation unit and the index for it
     clang_disposeTranslationUnit(translation);
     clang_disposeIndex(index);
 }
 
+/// @brief Calculates the similiarty between two functions on a scale of 1 and 0 using eucladian distance and normalization calc
+/// @param function1 First function to compare
+/// @param function2 Second function to compare
+/// @return Similiarty from 1 to 0
 double SimilarityCalculation(const std::vector<int>& function1, const std::vector<int>& function2)
 {
+    // set vars
     double distance = 0.0;
     double maxdistance = 0.0;
     
@@ -254,9 +295,10 @@ double SimilarityCalculation(const std::vector<int>& function1, const std::vecto
     {
         double difference = function1[i] - function2[i];
         distance += pow(difference, 2);
-        maxdistance += pow(std::max(function1[i], function2[i]), 2); // Calculate maximum possible distance
+        maxdistance += pow(std::max(function1[i], function2[i]), 2);
     }
     
+    // finish calculation for distance and max distance
     distance = sqrt(distance);
     maxdistance = sqrt(maxdistance);
 
@@ -268,27 +310,36 @@ double SimilarityCalculation(const std::vector<int>& function1, const std::vecto
 
 int main() 
 {
+    // set vars
     const char *fileName1 = "file1.cpp";
     const char *fileName2 = "file2.cpp";
     std::vector<Node> file1Nodes;
     std::vector<Node> file2Nodes;
+    
+    // Read each file for contents
     ReadFile(fileName1, file1Nodes);    
     ReadFile(fileName2, file2Nodes);
 
-    // columns
-    std::cout << std::setw(15) << std::right << " "; // Align the first column header
+    /*
+        Print out function info with aligned columns
+    */
+    
+    // header column
+    std::cout << std::setw(15) << std::right << " ";
     for (const auto& file2Node : file2Nodes) 
     {
         std::cout << std::setw(15) << std::right << file2Node.GetFunctionName();
     }
     std::cout << std::endl;
 
-    // Print out function info with aligned columns
-    for (const auto& file1Node : file1Nodes) 
+    // table info
+    for (const auto& file1Node : file1Nodes) // iterate through the first section
     {
+        // get the info of the file into the vector and print function name
         std::vector<int> file1Vector = file1Node.GetValues();
         std::cout << std::setw(15) << std::right << file1Node.GetFunctionName();
 
+        // go through the second file and compare the two and print findings
         for (const auto& file2Node : file2Nodes) 
         {
             std::vector<int> file2Vector = file2Node.GetValues();
