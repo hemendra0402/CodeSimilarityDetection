@@ -9,34 +9,50 @@
 // ./run runs the program
 // clang++ -std=c++11 -I/usr/local/opt/llvm/include -L/usr/local/opt/llvm/lib main.cpp -o run.exe -lclang
 // clang++ -std=c++14 -I "C:\LLVM\include" -L "C:\LLVM\lib" mymain.cpp -o run.exe -llibclang
+//clang++ -std=c++11 -I/Users/kathi/Downloads/cpts475/llvm-project/clang/include -L/Users/kathi/Downloads/cpts475/llvm-project/build/lib mymain.cpp -o run.exe -lclang -Wl,-rpath,/Users/kathi/Downloads/cpts475/llvm-project/build/lib
 
 /// @brief Node containing an individual nodes features
 class Node {
     public: 
         Node(const std::string& functionName, const std::string& fileName) : 
         functionName(functionName), fileName(fileName), 
-        numCallExpr(0), numParamDecl(0), numVarDecl(0), numBinaryOperator(0) {}
+        numCallExpr(0), numParamDecl(0), numVarDecl(0), numBinaryOperator(0),numIfStmt(0), numForStmt(0), numWhileStmt(0) {}
         
         /// @brief Every time a child is visited check the element for certain features and increment them to the node
         static enum CXChildVisitResult Visitor(CXCursor cursor, CXCursor parent, CXClientData client_data) 
-        {
+        {    int W_numCallExpr = 5; 
+             int W_numParamDecl = 3;
+             int W_numVarDecl = 2;
+             int W_numBinaryOperator = 4;
+             int W_numIfStmt = 6;
+             int W_numForStmt = 5;
+             int W_numWhileStmt = 4;
             // contains list of clang kinds
             // https://clang.llvm.org/doxygen/group__CINDEX.html#gaaccc432245b4cd9f2d470913f9ef0013
             Node* node = static_cast<Node*>(client_data);
             switch(clang_getCursorKind(cursor))
             {
                 case CXCursor_CallExpr:
-                    node->numCallExpr++;
+                    node->numCallExpr=node->numCallExpr+W_numCallExpr;
                     break;
                 case CXCursor_ParmDecl:
-                    node->numParamDecl++;
+                    node->numParamDecl=node->numParamDecl+W_numParamDecl;
                     break;
                 case CXCursor_VarDecl:
-                    node->numVarDecl++;
+                    node->numVarDecl=node->numVarDecl+W_numVarDecl;
                     break;
                 case CXCursor_BinaryOperator :
-                    node->numBinaryOperator++;
+                    node->numBinaryOperator=node->numBinaryOperator+W_numBinaryOperator;
+                case CXCursor_IfStmt:
+                    node->numIfStmt=node->numIfStmt+W_numBinaryOperator;
                     break;
+                case CXCursor_ForStmt:
+                    node->numForStmt=node->numForStmt+W_numForStmt;
+                    break;
+                case CXCursor_WhileStmt:
+                    node->numWhileStmt=node->numWhileStmt+W_numWhileStmt;
+                    break;
+                
             }
 
             return CXChildVisit_Recurse;
@@ -89,6 +105,12 @@ class Node {
         int numParamDecl;
         int numVarDecl;
         int numBinaryOperator;
+        int numIfStmt;
+        int numForStmt;
+        int numWhileStmt;
+        
+
+        
 };
 
 /// @brief Creates a node with function information
@@ -350,3 +372,4 @@ int main()
     }
     return 0;
 }
+
