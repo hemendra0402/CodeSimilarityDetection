@@ -16,7 +16,7 @@ class Node {
     public: 
         Node(const std::string& functionName, const std::string& fileName) : 
         functionName(functionName), fileName(fileName), 
-        numCallExpr(0), numParamDecl(0), numVarDecl(0), numBinaryOperator(0),numIfStmt(0), numForStmt(0), numWhileStmt(0) {}
+        numCallExpr(0), numParamDecl(0), numVarDecl(0), numBinaryOperator(0),numIfStmt(0), numForStmt(0), numWhileStmt(0),numSwitchStmt(0),numReturnStmt(0) {}
         
         /// @brief Every time a child is visited check the element for certain features and increment them to the node
         static enum CXChildVisitResult Visitor(CXCursor cursor, CXCursor parent, CXClientData client_data) 
@@ -27,6 +27,8 @@ class Node {
              int W_numIfStmt = 6;
              int W_numForStmt = 5;
              int W_numWhileStmt = 4;
+             int W_numSwitchStmt=5;
+             int W_numReturnStmt=6;
             // contains list of clang kinds
             // https://clang.llvm.org/doxygen/group__CINDEX.html#gaaccc432245b4cd9f2d470913f9ef0013
             Node* node = static_cast<Node*>(client_data);
@@ -51,6 +53,12 @@ class Node {
                     break;
                 case CXCursor_WhileStmt:
                     node->numWhileStmt=node->numWhileStmt+W_numWhileStmt;
+                    break;
+                case CXCursor_SwitchStmt:
+                    node->numSwitchStmt += W_numSwitchStmt;
+                    break;
+                case CXCursor_ReturnStmt:
+                    node->numReturnStmt += W_numReturnStmt;
                     break;
                 
             }
@@ -108,6 +116,8 @@ class Node {
         int numIfStmt;
         int numForStmt;
         int numWhileStmt;
+        int numReturnStmt;
+        int numSwitchStmt;
         
 
         
