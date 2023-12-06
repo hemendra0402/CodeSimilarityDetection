@@ -1,8 +1,24 @@
 #include <iostream>
 
-int function1(int a, int b)
+double file1_mul(double a, int b)
+{
+    double answer = 0;
+    if (b < 0)
+    {
+        std::cerr << "Error! Negative values not supported.\n";
+        return 0;
+    }
+
+    for (int i = 0; i < b; i++)
+    {
+        answer += a;
+    }
+    return answer;
+}
+
+double fil1_add(double a, double b)
 {   
-    int sum= a+b;
+    double sum = a+b;
     return sum;
 }
 
@@ -10,5 +26,5 @@ int main()
 {
     int a = 4;
     int b = 6;
-    std::cout<<function1(a,b);
+    std::cout << fil1_add(a,b);
 }
