@@ -20,47 +20,48 @@ class Node {
         
         /// @brief Every time a child is visited check the element for certain features and increment them to the node
         static enum CXChildVisitResult Visitor(CXCursor cursor, CXCursor parent, CXClientData client_data) 
-        {    int W_numCallExpr = 5; 
-             int W_numParamDecl = 3;
-             int W_numVarDecl = 2;
-             int W_numBinaryOperator = 4;
-             int W_numIfStmt = 6;
-             int W_numForStmt = 5;
-             int W_numWhileStmt = 4;
-             int W_numSwitchStmt=5;
-             int W_numReturnStmt=6;
+        {    
+            int W_numCallExpr = 1; 
+            int W_numParamDecl = 5;
+            int W_numVarDecl = 1;
+            int W_numBinaryOperator = 1;
+            int W_numIfStmt = 1;
+            int W_numForStmt = 1;
+            int W_numWhileStmt = 1;
+            int W_numSwitchStmt = 1;
+            int W_numReturnStmt = 5;
+            
             // contains list of clang kinds
             // https://clang.llvm.org/doxygen/group__CINDEX.html#gaaccc432245b4cd9f2d470913f9ef0013
             Node* node = static_cast<Node*>(client_data);
             switch(clang_getCursorKind(cursor))
             {
                 case CXCursor_CallExpr:
-                    node->numCallExpr=node->numCallExpr+W_numCallExpr;
+                    node->numCallExpr = node->numCallExpr+W_numCallExpr;
                     break;
                 case CXCursor_ParmDecl:
-                    node->numParamDecl=node->numParamDecl+W_numParamDecl;
+                    node->numParamDecl = node->numParamDecl+W_numParamDecl;
                     break;
                 case CXCursor_VarDecl:
-                    node->numVarDecl=node->numVarDecl+W_numVarDecl;
+                    node->numVarDecl = node->numVarDecl+W_numVarDecl;
                     break;
                 case CXCursor_BinaryOperator :
-                    node->numBinaryOperator=node->numBinaryOperator+W_numBinaryOperator;
+                    node->numBinaryOperator = node->numBinaryOperator+W_numBinaryOperator;
                 case CXCursor_IfStmt:
-                    node->numIfStmt=node->numIfStmt+W_numBinaryOperator;
+                    node->numIfStmt = node->numIfStmt+W_numBinaryOperator;
                     break;
                 case CXCursor_ForStmt:
-                    node->numForStmt=node->numForStmt+W_numForStmt;
+                    node->numForStmt = node->numForStmt+W_numForStmt;
                     break;
                 case CXCursor_WhileStmt:
-                    node->numWhileStmt=node->numWhileStmt+W_numWhileStmt;
+                    node->numWhileStmt = node->numWhileStmt+W_numWhileStmt;
                     break;
                 case CXCursor_SwitchStmt:
-                    node->numSwitchStmt += W_numSwitchStmt;
+                    node->numSwitchStmt = node->numSwitchStmt+W_numSwitchStmt;
                     break;
                 case CXCursor_ReturnStmt:
-                    node->numReturnStmt += W_numReturnStmt;
+                    node->numReturnStmt = node->numReturnStmt+W_numReturnStmt;
                     break;
-                
             }
 
             return CXChildVisit_Recurse;
@@ -82,13 +83,17 @@ class Node {
             std::cout << "Number of ParamDecl: " << numParamDecl << std::endl;
             std::cout << "Number of VarDecl " << numVarDecl << std::endl;
             std::cout << "Number of BinaryOperator " << numBinaryOperator << std::endl;
+            std::cout << "Number of numIfStmt " << numIfStmt << std::endl;
+            std::cout << "Number of numForStmt " << numForStmt << std::endl;
+            std::cout << "Number of numWhileStmt " << numWhileStmt << std::endl;
+            std::cout << "Number of numReturnStmt " << numReturnStmt << std::endl;
         }
 
         /// @brief Getter for the function values
         /// @return The function values
         std::vector<int> GetValues() const
         {
-            std::vector<int> values = {numCallExpr, numParamDecl, numVarDecl, numBinaryOperator};
+            std::vector<int> values = {numCallExpr, numParamDecl, numVarDecl, numBinaryOperator, numIfStmt, numForStmt, numWhileStmt, numSwitchStmt, numReturnStmt};
             return values;
         }
 
@@ -318,6 +323,12 @@ void ReadFile(const char* fileName, std::vector<Node>& nodeVector)
 /// @return Similiarty from 1 to 0
 double SimilarityCalculation(const std::vector<int>& function1, const std::vector<int>& function2)
 {
+    if (function1.size() != function2.size()) 
+    {
+        std::cout << "Error function sizes are not the same" << std::endl;
+        return -1;
+    }
+
     // set vars
     double distance = 0.0;
     double maxdistance = 0.0;
@@ -357,10 +368,12 @@ int main()
     */
     
     // header column
-    std::cout << std::setw(15) << std::right << " ";
+    int indent_amount = 20;
+
+    std::cout << std::setw(indent_amount) << std::right << " ";
     for (const auto& file2Node : file2Nodes) 
     {
-        std::cout << std::setw(15) << std::right << file2Node.GetFunctionName();
+        std::cout << std::setw(indent_amount) << std::right << file2Node.GetFunctionName();
     }
     std::cout << std::endl;
 
@@ -369,14 +382,14 @@ int main()
     {
         // get the info of the file into the vector and print function name
         std::vector<int> file1Vector = file1Node.GetValues();
-        std::cout << std::setw(15) << std::right << file1Node.GetFunctionName();
+        std::cout << std::setw(indent_amount) << std::right << file1Node.GetFunctionName();
 
         // go through the second file and compare the two and print findings
         for (const auto& file2Node : file2Nodes) 
         {
             std::vector<int> file2Vector = file2Node.GetValues();
             double similarity = SimilarityCalculation(file1Vector, file2Vector);
-            std::cout << std::setw(15) << std::right << similarity;
+            std::cout << std::setw(indent_amount) << std::right << similarity;
         }
         std::cout << std::endl;
     }
